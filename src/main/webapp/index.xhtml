@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui" lang="pt-br">
+<h:head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+
+	<title>SYSTEM</title>
+</h:head>
+<h:body id="body" >
+
+	<h:form id="formTable">
+	
+	    <p:panel id="basic" header="Lista de Deputados" footer="Desenvolvido por Anderson Thiago @Jubureba" style="margin-bottom:20px; width: auto;">
+        
+    	
+		<p:dataTable value="#{parl.deputadosList}" var="f" width="800px" style="width: auto;"
+			paginator="true" rows="5" id="DeputadoTable" widgetVar="tDeputados"  filteredValue="#{parl.deputadosFiltered}"
+			paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+			currentPageReportTemplate="{startRecord}-{endRecord} of {totalRecords} records"
+			paginatorPosition="bottom" rowsPerPageTemplate="5">
+
+			<f:facet name="header">
+				<p:outputPanel>
+					<p:inputText id="globalFilter" onkeyup="PF('tDeputados').filter()"
+						style="width:150px" placeholder="Buscar "/>
+				</p:outputPanel>
+			</f:facet>
+
+			<p:column visible="false"  filterBy="#{f.id}" style="width:50px; max-width: 50px; font-size: 10pt;"  filterMatchMode="contains">
+				<f:facet name="header">
+					<p:outputLabel value="Id" />
+				</f:facet>
+				<p:outputLabel value="#{f.id}" />
+			</p:column>
+			<p:column  filterBy="#{f.nome}" style="width:250px; font-size: 10pt;"  filterMatchMode="contains">
+				<f:facet name="header">
+					<p:outputLabel value="Nome" />
+				</f:facet>
+				<p:outputLabel value="#{f.nome}" />
+			</p:column>
+			<p:column  filterBy="#{f.siglaPartido}" style="width:200px;  font-size: 10pt;"  filterMatchMode="contains">
+				<f:facet name="header">
+					<p:outputLabel value="Partido" />
+				</f:facet>
+				<p:outputLabel value="#{f.siglaPartido}" />
+			</p:column>
+			<p:column filterBy="#{f.siglaUf}" style="width:100px;  font-size: 10pt;" filterMatchMode="contains">
+				<f:facet name="header">
+					<p:outputLabel value="UF" />
+				</f:facet>
+				<p:outputLabel value="#{f.siglaUf}" />
+			</p:column>
+			<p:column style="width:50px;  font-size: 10pt; ">
+				<f:facet name="header">
+					<p:outputLabel value="Visualizações" />
+				</f:facet>
+				<p:outputLabel value="#{f.visualizacoes}" />
+			</p:column>
+			<p:column style="width:50px;  font-size: 10pt;">
+				<f:facet name="header">
+					<p:outputLabel value="Detalhes" />
+				</f:facet>
+				<p:commandButton value="Detalhes" id="btnView"
+					update=":details formTable" oncomplete="PF('details').show();"
+					action="#{parl.detalhar(f.id)}">
+					<f:setPropertyActionListener value="#{f}"
+						target="#{parl.deputados}" />
+					<f:actionListener binding="#{parl.despesas(f.id)}"></f:actionListener>
+					<f:actionListener
+						binding="#{parl.setDeputadoVisualizacao((f.visualizacoes)+1)}"></f:actionListener>
+
+				</p:commandButton>
+				<p:tooltip position="top" for="btnView" value="Visualizar" />
+			</p:column>
+		</p:dataTable>
+		</p:panel>
+	</h:form>
+
+	<!--  
+		===============================
+		=================================
+		====================================
+		############ MODAL DETALHES DO DEPUTADO 
+		====================================
+		==================================
+		================================
+		 -->
+	<p:dialog widgetVar="details" id="details" showEffect="fade"
+		hideEffect="fade" styleClass="modal-dialog" header="Detalhes de #{parl.deputados.nome}"
+		appendTo="@(body)" closable="true" resizable="false" responsive="true"
+		modal="true" height="auto">
+		<h:form id="formDetails">
+			<p:panelGrid columns="2">
+				<f:facet name="header">
+					<p:graphicImage
+						value="#{parl.detaillist.detalhes.ultimoStatus.urlFoto}" />
+				</f:facet>
+
+				<h:outputText value="Nome:" />
+				<h:outputText value="#{parl.detaillist.detalhes.nomeCivil}" />
+
+				<h:outputText value="Data Nascimento" />
+				<h:outputText value="#{parl.detaillist.detalhes.dataNascimento}" />
+
+				<h:outputText value="Sexo" />
+				<h:outputText value="#{parl.detaillist.detalhes.sexo}" />
+
+				<h:outputText value="Partido" />
+				<h:outputText
+					value="#{parl.detaillist.detalhes.ultimoStatus.siglaPartido}" />
+
+				<h:outputText value="Detalhar" />
+				<p:commandButton value="Gastos"
+					oncomplete="PF('detailsGasto').show();" update=":detailsGasto" />
+			</p:panelGrid>
+
+			<p:commandButton update="formTable:DeputadoTable"
+				styleClass="btn-back" value="« voltar"
+				onclick="PF('details').hide();" />
+
+		</h:form>
+	</p:dialog>
+
+	<!--  
+		===============================
+		=================================
+		====================================
+		############ MODAL DETALHES DE GASTOS DO DEPUTADO
+		====================================
+		==================================
+		================================
+		 -->
+	<p:dialog widgetVar="detailsGasto" id="detailsGasto" showEffect="fade"
+		hideEffect="fade" header="Detalhes de Gastos do #{parl.deputados.nome} - 2 últimos mêses do ano de #{parl.despesas.ano}" appendTo="@(body)" closable="true"
+		resizable="false" responsive="true" modal="true" height="auto" width="800px">
+
+		<h:form id="formDetailsGasto">
+			<p:dataTable value="#{parl.despesasList}" var="d" 
+				paginator="true" rows="5"
+				paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+				currentPageReportTemplate="{startRecord}-{endRecord} of {totalRecords} records"
+				paginatorPosition="bottom" rowsPerPageTemplate="5"
+				rowKey="#{despesa.mes}">
+
+				<p:column style="font-size: 10pt;" >
+					<f:facet name="header">
+						<p:outputLabel value="Tipo de Despesa" />
+					</f:facet>
+					<p:outputLabel value="#{d.tipoDespesa}" />
+				</p:column>
+				<p:column style="font-size: 10pt;">
+					<f:facet name="header">
+						<p:outputLabel value="Tipo do Documento">
+						</p:outputLabel>
+					</f:facet>
+					<p:outputLabel value="#{d.tipoDocumento}"></p:outputLabel>
+				</p:column>
+				<p:column style="font-size: 10pt;">
+					<f:facet name="header">
+						<p:outputLabel value="Data do Documento">
+						</p:outputLabel>
+					</f:facet>
+					<p:outputLabel value="#{d.dataDocumento}"></p:outputLabel>
+				</p:column>
+				<p:column style="font-size: 10pt;">
+					<f:facet name="header">
+						<p:outputLabel value="Valor Liquido">
+						</p:outputLabel>
+					</f:facet>
+					<p:outputLabel value="#{d.valorLiquido}"></p:outputLabel>
+				</p:column>
+
+			</p:dataTable>
+
+
+		</h:form>
+
+	</p:dialog>
+
+</h:body>
+
+</html>
+
+
+
+
+
+
+
+
+
+
+
